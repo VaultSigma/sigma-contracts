@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/contracts"
   ],
   "packageManager": "yarn@4.9.1"
 }
