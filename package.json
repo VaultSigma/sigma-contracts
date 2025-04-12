@@ -3,7 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/contracts"
+    "packages/*"
   ],
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.9.1",
+  "scripts": {
+    "build": "yarn workspaces foreach -p run build",
+    "test": "yarn workspaces foreach -p run test",
+    "clean": "yarn workspaces foreach -p run clean",
+    "lint": "yarn workspaces foreach -p run lint",
+    "lint:fix": "yarn workspaces foreach -p run lint:fix"
+  }
 }
