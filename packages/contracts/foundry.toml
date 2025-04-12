@@ -1,6 +1,42 @@
 [profile.default]
 src = "src"
+test = "test"
 out = "out"
 libs = ["lib"]
+script = "script"
+solc_version = "0.8.29"
+evm_version = "shanghai"
+extra_output = [
+  "abi",
+  "evm.bytecode",
+  "evm.deployedBytecode",
+  "evm.methodIdentifiers",
+]
+optimizer = true
+optimizer_runs = 20_000
+force = false
+
+[rpc_endpoints]
+mainnet = "https://rpc.ankr.com/eth"
+sepolia = "https://ethereum-sepolia-rpc.publicnode.com"
+swell = "https://swellchain-testnet.infura.io/v3/3fad6f61e1b343dfa494685575db5723"
+
+[profile.SMT.model_checker]
+contracts = { }
+engine = "chc"
+solvers = ["z3"]
+show_unproved = true
+timeout = 0
+targets = [
+  "assert",
+  "constantCondition",
+  "divByZero",
+  "outOfBounds",
+  "overflow",
+  "popEmptyArray",
+  "underflow",
+  "balance",
+]
+
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
