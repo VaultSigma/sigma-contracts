@@ -8,12 +8,13 @@ A monorepo containing smart contracts and related tooling for the Sigma protocol
 
 - [Node.js](https://nodejs.org/) (v18 or later)
 - [Yarn](https://yarnpkg.com/) (v4 or later)
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-org/sigma-contracts.git
+git clone https://github.com/VaultSigma/sigma-contracts.git
 cd sigma-contracts
 ```
 
@@ -35,13 +36,23 @@ cp .env.example .env
 - `INFURA_API_KEY`: Your Infura API key (if using Infura)
 - `ETHERSCAN_API_KEY`: Your Etherscan API key (for contract verification)
 
-## 📦 Packages
+## 📦 Project Structure
 
-This monorepo contains the following packages:
-
-- `packages/contracts`: Core smart contracts
-- `packages/tests`: Test suite for the contracts
-- `packages/scripts`: Deployment and utility scripts
+```
+packages/
+└── contracts/                 # Smart contracts package
+    ├── src/                   # Source files
+    │   ├── Diamond.sol        # Diamond proxy contract
+    │   ├── facets/            # Diamond facets
+    │   │   ├── DiamondCutFacet.sol
+    │   │   ├── DiamondLoupeFacet.sol
+    │   │   └── OwnershipFacet.sol
+    │   ├── interfaces/        # Contract interfaces
+    │   └── libraries/         # Shared libraries
+    ├── test/                  # Test files
+    ├── script/                # Deployment scripts
+    └── lib/                   # Dependencies
+```
 
 ## 🛠 Development
 
