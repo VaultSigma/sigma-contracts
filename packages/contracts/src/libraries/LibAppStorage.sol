@@ -17,10 +17,6 @@ struct AppStorage {
 
 /// @notice Library used as a shared storage among all protocol libraries
 library LibAppStorage {
-    /**
-     * @notice Returns `AppStorage` struct used as a shared storage among all libraries
-     * @return ds `AppStorage` struct used as a shared storage
-     */
     function appStorage() internal pure returns (AppStorage storage ds) {
         assembly {
             ds.slot := 0
