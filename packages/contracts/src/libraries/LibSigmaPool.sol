@@ -5,7 +5,8 @@ import {AppStorage, LibAppStorage} from "./LibAppStorage.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "abdk-libraries-solidity/ABDKMathQuad.sol";
+import {IvSigmaToken} from "../interfaces/IvSigmaToken.sol";
+import "abdk/ABDKMathQuad.sol";
 
 import "./Constants.sol";
 
@@ -17,7 +18,7 @@ library LibSigmaPool {
 
     bytes32 constant SIGMA_POOL_STORAGE_POSITION =
         bytes32(
-            uint256(keccak256("sigma.contracts.sigma.pool.storage")) - 1
+            uint256(keccak256("sigma.contracts.pool.storage")) - 1
         ) & ~bytes32(uint256(0xff));
 
     struct SigmaPoolStorage {
@@ -33,7 +34,7 @@ library LibSigmaPool {
         bool[] isMintPaused;
         bool[] isRedeemPaused;
         mapping(address user => Lock[] locks) userLocks;
-        mapping(address user => uint256[] value) totalLockedPerUser;
+        mapping(address user => uint256 value) totalLockedPerUser;
         mapping(address collateralAddress => bool isEnabled) isCollateralEnabled;
         mapping(address collateralAddress => uint256 collateralIndex) collateralIndex;
     }
@@ -102,17 +103,31 @@ library LibSigmaPool {
         createLock(amount, timelock);
         uint256 shares = calculateShares(amount, s.totalAssets, s.totalShares);
 
-        s.totalAssets = s.totalAssets.add(amount);
-        // s.totalAssets = tryAdd(s.totalAssets, amount);
-        s.totalShares = s.totalShares.add(shares);
+        s.totalAssets = s.totalAssets + amount;
+        s.totalShares = s.totalShares + shares;
+
+        _mintSigma(msg.sender, shares, collateralIndex);
 
         emit Deposit(collateralIndex, amount);
     }
 
-    function calculateShares(uint256 amount, uint256 totalAssets, uint256 totalShares) internal pure returns(uint256) {
+    function redeem() internal {}
+
+    function _mintSigma(address to, uint256 amount, uint256 collateralIndex) internal {
+        SigmaPoolStorage storage s = sigmaPoolStorage();
+
+        require(to != address(0), "SigmaPool: mint to the zero address");
+        require(s.isMintPaused[collateralIndex] == false, "SigmaPool: minting is paused");
+
+        // Remember to set minting and redeeem fees
+        s.totalShares = s.totalShares + amount;
+        IvSigmaToken(s.vSigmaToken).mint(to, amount);
+    }
+
+    function calculateShares(uint256 amount, uint256 totalAssets, uint256 totalShares) internal returns(uint256) {
         SigmaPoolStorage storage s = sigmaPoolStorage();
         
-        if (s.totalSupply == 0) {
+        if (s.totalShares == 0) {
             return amount;
         }
 
@@ -133,20 +148,21 @@ library LibSigmaPool {
             rewards
         ));
 
-        s.totalLockedPerUser[msg.sender] = s.totalLockedPerUser[msg.sender].add(amount);
+        s.totalLockedPerUser[msg.sender] = s.totalLockedPerUser[msg.sender] + amount;
         emit LockCreated(msg.sender, id, amount, unlockTime);
     }
 
     function extendLock(uint256 id, uint256 additional_time) internal {
         SigmaPoolStorage storage s = sigmaPoolStorage();
 
-        require(msg.sender == s.userLocks[msg.sender][id].owner, "SigmaPool: you are not the owner of this lock");
+        require(s.userLocks[msg.sender].length > 0, "SigmaPool: no locks found");
+        require(id < s.userLocks[msg.sender].length, "SigmaPool: lock not found");
         require(additional_time > 0, "SigmaPool: additional time is zero");
         require(additional_time < MAX_LOCK_TIME, "SigmaPool: additional time is greater than 365 days");
 
         Lock storage l = s.userLocks[msg.sender][id];
-        l.timelock = l.timelock.add(additional_time);
-        l.unlockTime = l.unlockTime.add(additional_time);
+        l.timelock = l.timelock + additional_time;
+        l.unlockTime = l.unlockTime + additional_time;
         l.rewards = calculateTimelockRewards(l.timelock);
 
         emit LockExtended(msg.sender, id, l.timelock, l.unlockTime);
