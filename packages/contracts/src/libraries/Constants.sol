@@ -23,3 +23,12 @@ uint256 constant ONE = uint256(1 ether);
 uint256 constant _NOT_ENTERED = 1;
 /// @dev Reentrancy constant
 uint256 constant _ENTERED = 2;
+
+/// @dev Minimum timelock for a deposit
+uint256 constant MIN_LOCK_TIME = 1 days;
+/// @dev Maximum timelock for a deposit
+uint256 constant MAX_LOCK_TIME = 365 days;
+/// @dev Base reward rate for a timelock
+uint256 constant BASE_REWARD_RATE = 15e17; // PLS DOUBLE CHECK THIS
+/// @dev Boost rate for a timelock
+uint256 constant BOOST_RATE = 100;
