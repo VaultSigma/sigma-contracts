@@ -22,13 +22,18 @@ library LibSigmaPool {
         ) & ~bytes32(uint256(0xff));
 
     struct SigmaPoolStorage {
-        // IERC20 asset; // Experimenting with a 2 asset pool
+        // IERC20 asset; // Experimenting with a 1 asset pool ??swETH
         address vSigmaToken;
+        address feeTreasury;
+        address sigmaRebalancer;
+        uint256[] rebalancerBalance;
+
+        uint256 redemptionFee;
         uint256 lockIds;
         uint256 totalAssets; 
         uint256 totalShares;
-        uint256[] mintingFee;
-        uint256[] redemptionFee;
+        // uint256[] mintingFee;
+        // uint256[] redemptionFee;
         address[] collateralAddresses;
         string[] collateralSymbols;
         bool[] isMintPaused;
@@ -51,14 +56,12 @@ library LibSigmaPool {
         uint256 index;
         address collateralAddress;
         string symbol;
-        uint256 mintingFee;
-        uint256 redemptionFee;
         bool isMintPaused;
         bool isRedeemPaused;
     }
 
     event CollateralAdded(address collateralAddress, uint256 index);
-    event FeesSet(uint256 collateralIndex, uint256 mintingFee, uint256 redemptionFee);
+    event FeesSet(uint256 redemptionFee);
     event LockCreated(address user, uint256 id, uint256 amount, uint256 unlockTime);
     event Deposit(uint256 collateralIndex, uint256 amount);
     event LockExtended(address user, uint256 id, uint256 timelock, uint256 unlockTime);
@@ -83,9 +86,31 @@ library LibSigmaPool {
 
         // require(address(s.asset) == address(0), "SigmaPool: already initialized");
         require(_asset != address(0), "SigmaPool: asset is zero address");
+        require(_vSigmaToken != address(0), "SigmaPool: vSigmaToken is zero address");
 
         // s.asset = IERC20(_asset);
         s.vSigmaToken = _vSigmaToken;
+    }
+
+    function allocateToRebalancer(uint256 collateralIndex, uint256 amount) internal {
+        SigmaPoolStorage storage s = sigmaPoolStorage();
+
+        IERC20(s.collateralAddresses[collateralIndex]).safeTransfer(s.sigmaRebalancer, amount);
+        s.rebalancerBalance[collateralIndex] = s.rebalancerBalance[collateralIndex] + amount;
+
+    }
+
+    // Look into multisig implementation
+    function setFeeTreasury(address _feeTreasury) internal {
+        SigmaPoolStorage storage s = sigmaPoolStorage();
+
+        s.feeTreasury = _feeTreasury;
+    }
+
+    function setSigmaRebalancer(address _sigmaRebalancer) internal {
+        SigmaPoolStorage storage s = sigmaPoolStorage();
+
+        s.sigmaRebalancer = _sigmaRebalancer;
     }
 
     function deposit(uint256 collateralIndex, uint256 amount, uint256 timelock) internal collateralEnabled(collateralIndex) {
@@ -124,7 +149,7 @@ library LibSigmaPool {
         IvSigmaToken(s.vSigmaToken).mint(to, amount);
     }
 
-    function calculateShares(uint256 amount, uint256 totalAssets, uint256 totalShares) internal returns(uint256) {
+    function calculateShares(uint256 amount, uint256 totalAssets, uint256 totalShares) internal view returns(uint256) {
         SigmaPoolStorage storage s = sigmaPoolStorage();
         
         if (s.totalShares == 0) {
@@ -188,8 +213,6 @@ library LibSigmaPool {
             index,
             collateralAddress,
             s.collateralSymbols[index],
-            s.mintingFee[index],
-            s.redemptionFee[index],
             s.isMintPaused[index],
             s.isRedeemPaused[index]
         );
@@ -206,8 +229,8 @@ library LibSigmaPool {
         s.collateralIndex[collateralAddress] = index;
         s.isCollateralEnabled[collateralAddress] = false;
         s.collateralSymbols.push(ERC20(collateralAddress).symbol());
-        s.mintingFee.push(0);
-        s.redemptionFee.push(0);
+        // s.mintingFee.push(0);
+        // s.redemptionFee.push(0);
 
         emit CollateralAdded(collateralAddress, index);
 
@@ -227,14 +250,20 @@ library LibSigmaPool {
         return false;
     }
 
-    function setFees(uint256 collateralIndex, uint256 mintingFee, uint256 redemptionFee) internal {
+    // Minting fees will be Zero(0). Redemption fees will be 10% of profits.
+    function setFees(uint256 redemptionFee) internal {
         SigmaPoolStorage storage s = sigmaPoolStorage();
 
-        s.mintingFee[collateralIndex] = mintingFee;
-        s.redemptionFee[collateralIndex] = redemptionFee;
+        s.redemptionFee = redemptionFee;
 
-        emit FeesSet(collateralIndex, mintingFee, redemptionFee);
+        emit FeesSet(redemptionFee);
     }
+
+
+    // function setAllocations() internal {
+    // }
+
+    // function getAllocations() internal view returns (uint256[] memory allocations) {}
     
 
 }

@@ -13,6 +13,7 @@ import {ManagerFacet} from "../../src/facets/ManagerFacet.sol";
 import {OwnershipFacet} from "../../src/facets/OwnershipFacet.sol";
 import {DiamondInit} from "../../src/upgradeInitializers/DiamondInit.sol";
 import {DiamondTestHelper} from "../helpers/DiamondTestHelper.sol";
+import {SigmaPoolFacet} from "../../src/facets/SigmaPoolFacet.sol";
 
 // import {UUPSTestHelper} from "../helpers/UUPSTestHelper.sol";
 /**
@@ -29,13 +30,14 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     DiamondLoupeFacet diamondLoupeFacet;
     ManagerFacet managerFacet;
     OwnershipFacet ownershipFacet;
-    
+    SigmaPoolFacet sigmaPoolFacet;
     // diamond facet implementation instances (should not be used in tests, use only on upgrades)
     AccessControlFacet accessControlFacetImplementation;
     DiamondCutFacet diamondCutFacetImplementation;
     DiamondLoupeFacet diamondLoupeFacetImplementation;
     ManagerFacet managerFacetImplementation;
     OwnershipFacet ownershipFacetImplementation;
+    SigmaPoolFacet sigmaPoolFacetImplementation;
 
     // facet names with addresses
     string[] facetNames;
@@ -54,6 +56,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     bytes4[] selectorsOfDiamondLoupeFacet;
     bytes4[] selectorsOfManagerFacet;
     bytes4[] selectorsOfOwnershipFacet;
+    bytes4[] selectorsOfSigmaPoolFacet;
 
 
 
@@ -82,6 +85,9 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         selectorsOfOwnershipFacet = getSelectorsFromAbi(
             "/out/OwnershipFacet.sol/OwnershipFacet.json"
         );
+        selectorsOfSigmaPoolFacet = getSelectorsFromAbi(
+            "/out/SigmaPoolFacet.sol/SigmaPoolFacet.json"
+        );
 
         // deploy facet implementation instances
         accessControlFacetImplementation = new AccessControlFacet();
@@ -89,7 +95,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         diamondLoupeFacetImplementation = new DiamondLoupeFacet();
         managerFacetImplementation = new ManagerFacet();
         ownershipFacetImplementation = new OwnershipFacet();
-
+        sigmaPoolFacetImplementation = new SigmaPoolFacet();
         // prepare diamond init args
         diamondInit = new DiamondInit();
         facetNames = [
@@ -97,7 +103,8 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
             "DiamondCutFacet",
             "DiamondLoupeFacet",
             "ManagerFacet",
-            "OwnershipFacet"
+            "OwnershipFacet",
+            "SigmaPoolFacet"
         ];
         DiamondInit.Args memory initArgs = DiamondInit.Args({
             admin: admin
@@ -112,7 +119,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
             )
         });
 
-        FacetCut[] memory cuts = new FacetCut[](3);
+        FacetCut[] memory cuts = new FacetCut[](6);
 
         cuts[0] = (
             FacetCut({
@@ -149,7 +156,13 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
                 functionSelectors: selectorsOfOwnershipFacet
             })
         );
-
+        cuts[5] = (
+            FacetCut({
+                facetAddress: address(sigmaPoolFacetImplementation),
+                action: FacetCutAction.Add,
+                functionSelectors: selectorsOfSigmaPoolFacet
+            })
+        );
         // deploy diamond
         vm.prank(owner);
         diamond = new Diamond(_args, cuts);
@@ -160,7 +173,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         diamondLoupeFacet = DiamondLoupeFacet(address(diamond));
         managerFacet = ManagerFacet(address(diamond));
         ownershipFacet = OwnershipFacet(address(diamond));
-
+        sigmaPoolFacet = SigmaPoolFacet(address(diamond));
         // get all addresses
         facetAddressList = diamondLoupeFacet.facetAddresses();
 

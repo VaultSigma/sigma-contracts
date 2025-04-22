@@ -49,4 +49,12 @@ contract ManagerFacet is Modifiers {
     function treasuryAddress() external view returns (address) {
         return store.treasuryAddress;
     }
+
+    function setSigmaToken(address _sigmaTokenAddress) external onlyAdmin {
+        store.sigmaTokenAddress = _sigmaTokenAddress;
+    }
+
+    function sigmaTokenAddress() external view returns (address) {
+        return store.sigmaTokenAddress;
+    }
 }

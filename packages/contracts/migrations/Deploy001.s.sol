@@ -19,6 +19,9 @@ import {LibAccessControl} from "../src/libraries/LibAccessControl.sol";
 import {AppStorage, LibAppStorage, Modifiers} from "../src/libraries/LibAppStorage.sol";
 import {LibDiamond} from "../src/libraries/LibDiamond.sol";
 import {DiamondTestHelper} from "../test/helpers/DiamondTestHelper.sol";
+import {SigmaPoolFacet} from "../src/facets/SigmaPoolFacet.sol";
+import {vSigmaToken} from "../src/core/vSigmaToken.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 /**
  * @notice It is expected that this contract is customized if you want to deploy your diamond
@@ -78,6 +81,9 @@ contract Deploy001 is Script, DiamondTestHelper {
     address adminAddress;
     address ownerAddress;
 
+    vSigmaToken sigmaToken;
+    ERC1967Proxy sigmaTokenProxy;
+
     Diamond diamond;
     DiamondInit diamondInit;
 
@@ -87,6 +93,7 @@ contract Deploy001 is Script, DiamondTestHelper {
     DiamondLoupeFacet diamondLoupeFacetImplementation;
     ManagerFacet managerFacetImplementation;
     OwnershipFacet ownershipFacetImplementation;
+    SigmaPoolFacet sigmaPoolFacetImplementation;
 
     // selectors for all of the facets
     bytes4[] selectorsOfAccessControlFacet;
@@ -94,6 +101,7 @@ contract Deploy001 is Script, DiamondTestHelper {
     bytes4[] selectorsOfDiamondLoupeFacet;
     bytes4[] selectorsOfManagerFacet;
     bytes4[] selectorsOfOwnershipFacet;
+    bytes4[] selectorsOfSigmaPoolFacet;
 
     function run() public virtual {
         // read env variables
@@ -132,6 +140,9 @@ contract Deploy001 is Script, DiamondTestHelper {
         selectorsOfOwnershipFacet = getSelectorsFromAbi(
             "/out/OwnershipFacet.sol/OwnershipFacet.json"
         );
+        selectorsOfSigmaPoolFacet = getSelectorsFromAbi(
+            "/out/SigmaPoolFacet.sol/SigmaPoolFacet.json"
+        );
 
         // deploy facet implementation instances
         accessControlFacetImplementation = new AccessControlFacet();
@@ -139,7 +150,7 @@ contract Deploy001 is Script, DiamondTestHelper {
         diamondLoupeFacetImplementation = new DiamondLoupeFacet();
         managerFacetImplementation = new ManagerFacet();
         ownershipFacetImplementation = new OwnershipFacet();
-
+        sigmaPoolFacetImplementation = new SigmaPoolFacet();
         // prepare DiamondInit args
         diamondInit = new DiamondInit();
         DiamondInit.Args memory diamondInitArgs = DiamondInit.Args({
@@ -156,7 +167,7 @@ contract Deploy001 is Script, DiamondTestHelper {
         });
 
         // prepare facet cuts
-        FacetCut[] memory cuts = new FacetCut[](5);
+        FacetCut[] memory cuts = new FacetCut[](6);
         cuts[0] = (
             FacetCut({
                 facetAddress: address(accessControlFacetImplementation),
@@ -192,6 +203,13 @@ contract Deploy001 is Script, DiamondTestHelper {
                 functionSelectors: selectorsOfOwnershipFacet
             })
         );
+        cuts[5] = (
+            FacetCut({
+                facetAddress: address(sigmaPoolFacetImplementation),
+                action: FacetCutAction.Add,
+                functionSelectors: selectorsOfSigmaPoolFacet
+            })
+        );
 
         // deploy diamond
         diamond = new Diamond(diamondArgs, cuts);
@@ -220,6 +238,8 @@ contract Deploy001 is Script, DiamondTestHelper {
         // start sending admin transactions
         vm.startBroadcast(adminPrivateKey);
 
+        // set SigmaToken address in the SigmaPoolFacet
+        SigmaPoolFacet sigmaPoolFacet = SigmaPoolFacet(address(diamond));
 
         // stop sending admin transactions
         vm.stopBroadcast();
@@ -230,6 +250,21 @@ contract Deploy001 is Script, DiamondTestHelper {
 
         // start sending owner transactions
         vm.startBroadcast(ownerPrivateKey);
+
+        bytes memory initSigmaPayload = abi.encodeWithSignature(
+            "initialize",
+            address(diamond)    
+        );
+
+        sigmaToken = new vSigmaToken();
+
+        // sigmaTokenProxy = new ERC1967Proxy(
+        //     address(sigmaToken),
+        //     initSigmaPayload
+        // );
+
+        // sigmaToken = vSigmaToken(address(sigmaTokenProxy));
+        sigmaToken = vSigmaToken(address(sigmaToken));
 
         vm.stopBroadcast();
 
@@ -242,6 +277,12 @@ contract Deploy001 is Script, DiamondTestHelper {
 
         // set Sigma token address in the Diamond
         ManagerFacet managerFacet = ManagerFacet(address(diamond));
+        managerFacet.setSigmaToken(address(sigmaToken));
+
+        address collateralToken = 0x4200000000000000000000000000000000000006;
+
+        // set Sigma token address in the SigmaPoolFacet
+        sigmaPoolFacet.initialize(collateralToken, address(sigmaToken));
 
         // stop sending admin transactions
         vm.stopBroadcast();

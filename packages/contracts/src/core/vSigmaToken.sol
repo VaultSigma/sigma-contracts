@@ -10,7 +10,8 @@ import "../libraries/Constants.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 
-abstract contract vSigmaToken is 
+contract vSigmaToken is 
+    Initializable,
     ERC20Upgradeable,
     OwnableUpgradeable,
     UUPSUpgradeable
@@ -41,12 +42,12 @@ abstract contract vSigmaToken is
         _;
     }
 
-    function initialize() external initializer {
+    function initialize(address _manager) external onlyInitializing() {
+        require(_manager != address(0), "vSigma Token: manager is zero address");
+        
         __ERC20_init("Sigma Vault", "vSIGMA");
         __UUPSUpgradeable_init();
-    }
-
-    function __ERC20Sigma_init_unchained(address _manager) internal onlyInitializing {
+        
         accessControl = IAccessControl(_manager);
     }
 
@@ -67,6 +68,8 @@ abstract contract vSigmaToken is
     // function setSymbol(string memory _symbol) external onlyOwner {
     //     symbol = _symbol;
     // }
-    
-    
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        // Only the owner can authorize upgrades
+    }
 }

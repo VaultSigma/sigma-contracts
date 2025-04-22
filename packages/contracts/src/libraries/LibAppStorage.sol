@@ -11,6 +11,7 @@ struct AppStorage {
     uint256 reentrancyStatus;
     // others
     address treasuryAddress;
+    address sigmaTokenAddress;
     // pausable
     bool paused;
 }
