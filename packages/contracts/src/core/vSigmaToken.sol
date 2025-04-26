@@ -56,6 +56,11 @@ contract vSigmaToken is
         emit Minting(msg.sender, to, amount);
     }
 
+    function burn(uint256 amount) external onlySigmaBurner {
+        _burn(msg.sender, amount);
+        emit Burning(msg.sender, amount);
+    }
+
     function burnFrom(address from, uint256 amount) external onlySigmaBurner {
         _burn(from, amount);
         emit Burning(from, amount);
