@@ -5,19 +5,25 @@ library LibStrategyRegistry {
     bytes32 internal constant STORAGE_SLOT = keccak256("sigma.storage.strategy.registry");
 
     struct StrategyInfo {
-        address deploymentAddress;
+        string ipfsUri;
         string strategyDesc; // This describes the strategy
         bool isActive;
+        uint256 createdAt;
+        StrategyType strategyType;
     }
 
     struct StrategyRegistryStorage {
         uint256 strategyCount;
-        mapping(bytes32 strategyId => StrategyInfo strategyInfo) stratByIds;
-        mapping(address deploymentAddress => bytes32 strategyId) stratAddrByIds;
-        bytes32[] strategyIds;
+        mapping(uint256 strategyId => StrategyInfo strategyInfo) stratByIds;
+        uint256[] strategyIds;
     }
 
-    event StrategyAdded(bytes32 strategyId, string strategyDesc);
+    enum StrategyType {
+        Experimental,
+        Stable
+    }
+
+    event StrategyAdded(uint256 strategyId, string strategyDesc);
 
     function registryStorage() internal pure returns (StrategyRegistryStorage storage ds) {
         bytes32 slot = STORAGE_SLOT;
@@ -26,44 +32,60 @@ library LibStrategyRegistry {
         }
     }
 
-    function addStrategy(address deploymentAddress, string memory strategyDesc) internal {
+    function addStrategy(string memory ipfsUri, string memory strategyDesc, StrategyType strategyType) internal {
         StrategyRegistryStorage storage s = registryStorage();
         
         // Might consider using a simple uint256 counter instead of a keccak256 hash in future
-        bytes32 strategyId = keccak256(abi.encodePacked(deploymentAddress));
+        uint256 strategyId = uint256(keccak256(abi.encodePacked(ipfsUri)));
 
-        require(deploymentAddress != address(0), "StrategyRegistry: deployment address is zero");
-        require(s.stratByIds[strategyId].deploymentAddress == address(0), "StrategyRegistry: strategy already exists");
+        require(bytes(s.stratByIds[strategyId].ipfsUri).length == 0, "StrategyRegistry: strategy already exists");
 
         // Leaving this in for now
         s.strategyCount++;
         s.strategyIds.push(strategyId); 
         s.stratByIds[strategyId] = StrategyInfo({
-            deploymentAddress: deploymentAddress,
+            ipfsUri: ipfsUri,
             strategyDesc: strategyDesc,
-            isActive: false
+            isActive: false,
+            createdAt: block.timestamp,
+            strategyType: strategyType
         });
-
-        s.stratAddrByIds[deploymentAddress] = strategyId;
 
         emit StrategyAdded(strategyId, strategyDesc);
     }
 
-    function toggleStrategy(bytes32 strategyId, bool isActive) internal {
+    function updateStrategy(uint256 strategyId, string memory ipfsUri, StrategyType strategyType) internal {
         StrategyRegistryStorage storage s = registryStorage();
 
-        require(s.stratByIds[strategyId].deploymentAddress != address(0), "StrategyRegistry: strategy does not exist");
+        require(bytes(s.stratByIds[strategyId].ipfsUri).length > 0, "StrategyRegistry: strategy does not exist");
+
+        s.stratByIds[strategyId].ipfsUri = ipfsUri;
+        s.stratByIds[strategyId].strategyType = strategyType;
+    }
+
+    function toggleStrategy(uint256 strategyId, bool isActive) internal {
+        StrategyRegistryStorage storage s = registryStorage();
+
+        require(bytes(s.stratByIds[strategyId].ipfsUri).length > 0, "StrategyRegistry: strategy does not exist");
 
         s.stratByIds[strategyId].isActive = isActive;
     }
 
-    function getStrategyInfo(bytes32 strategyId) internal view returns (StrategyInfo memory strategyInfo) {
+    function getStrategyInfo(uint256 strategyId) internal view returns (StrategyInfo memory strategyInfo) {
         StrategyRegistryStorage storage s = registryStorage();
 
-        require(s.stratByIds[strategyId].deploymentAddress != address(0), "StrategyRegistry: strategy does not exist");
+        require(bytes(s.stratByIds[strategyId].ipfsUri).length > 0, "StrategyRegistry: strategy does not exist");
 
         return s.stratByIds[strategyId];
     }
 
+    function getAllStrategies() internal view returns (StrategyInfo[] memory strategies) {
+        StrategyRegistryStorage storage s = registryStorage();
+
+        strategies = new StrategyInfo[](s.strategyCount);
+        for (uint256 i = 0; i < s.strategyCount; i++) {
+            strategies[i] = s.stratByIds[s.strategyIds[i]];
+        }
+    }
 
 }

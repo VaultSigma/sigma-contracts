@@ -14,7 +14,7 @@ import {OwnershipFacet} from "../../src/facets/OwnershipFacet.sol";
 import {DiamondInit} from "../../src/upgradeInitializers/DiamondInit.sol";
 import {DiamondTestHelper} from "../helpers/DiamondTestHelper.sol";
 import {SigmaPoolFacet} from "../../src/facets/SigmaPoolFacet.sol";
-
+import {StrategyRegistryFacet} from "../../src/facets/StrategyRegistryFacet.sol";
 // import {UUPSTestHelper} from "../helpers/UUPSTestHelper.sol";
 /**
  * @notice Deploys diamond contract with all of the facets
@@ -31,6 +31,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     ManagerFacet managerFacet;
     OwnershipFacet ownershipFacet;
     SigmaPoolFacet sigmaPoolFacet;
+    StrategyRegistryFacet strategyRegistryFacet;
     // diamond facet implementation instances (should not be used in tests, use only on upgrades)
     AccessControlFacet accessControlFacetImplementation;
     DiamondCutFacet diamondCutFacetImplementation;
@@ -38,7 +39,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     ManagerFacet managerFacetImplementation;
     OwnershipFacet ownershipFacetImplementation;
     SigmaPoolFacet sigmaPoolFacetImplementation;
-
+    StrategyRegistryFacet strategyRegistryFacetImplementation;
     // facet names with addresses
     string[] facetNames;
     address[] facetAddressList;
@@ -57,7 +58,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     bytes4[] selectorsOfManagerFacet;
     bytes4[] selectorsOfOwnershipFacet;
     bytes4[] selectorsOfSigmaPoolFacet;
-
+    bytes4[] selectorsOfStrategyRegistryFacet;
 
 
     /// @notice Deploys diamond and connects facets
@@ -88,6 +89,9 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         selectorsOfSigmaPoolFacet = getSelectorsFromAbi(
             "/out/SigmaPoolFacet.sol/SigmaPoolFacet.json"
         );
+        selectorsOfStrategyRegistryFacet = getSelectorsFromAbi(
+            "/out/StrategyRegistryFacet.sol/StrategyRegistryFacet.json"
+        );
 
         // deploy facet implementation instances
         accessControlFacetImplementation = new AccessControlFacet();
@@ -96,6 +100,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         managerFacetImplementation = new ManagerFacet();
         ownershipFacetImplementation = new OwnershipFacet();
         sigmaPoolFacetImplementation = new SigmaPoolFacet();
+        strategyRegistryFacetImplementation = new StrategyRegistryFacet();
         // prepare diamond init args
         diamondInit = new DiamondInit();
         facetNames = [
@@ -104,7 +109,8 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
             "DiamondLoupeFacet",
             "ManagerFacet",
             "OwnershipFacet",
-            "SigmaPoolFacet"
+            "SigmaPoolFacet",
+            "StrategyRegistryFacet"
         ];
         DiamondInit.Args memory initArgs = DiamondInit.Args({
             admin: admin
@@ -119,7 +125,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
             )
         });
 
-        FacetCut[] memory cuts = new FacetCut[](6);
+        FacetCut[] memory cuts = new FacetCut[](7);
 
         cuts[0] = (
             FacetCut({
@@ -163,6 +169,13 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
                 functionSelectors: selectorsOfSigmaPoolFacet
             })
         );
+        cuts[6] = (
+            FacetCut({
+                facetAddress: address(strategyRegistryFacetImplementation),
+                action: FacetCutAction.Add,
+                functionSelectors: selectorsOfStrategyRegistryFacet
+            })
+        );
         // deploy diamond
         vm.prank(owner);
         diamond = new Diamond(_args, cuts);
@@ -174,6 +187,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         managerFacet = ManagerFacet(address(diamond));
         ownershipFacet = OwnershipFacet(address(diamond));
         sigmaPoolFacet = SigmaPoolFacet(address(diamond));
+        strategyRegistryFacet = StrategyRegistryFacet(address(diamond));
         // get all addresses
         facetAddressList = diamondLoupeFacet.facetAddresses();
 

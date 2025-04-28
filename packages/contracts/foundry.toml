@@ -19,7 +19,8 @@ force = false
 [rpc_endpoints]
 mainnet = "https://rpc.ankr.com/eth"
 sepolia = "https://ethereum-sepolia-rpc.publicnode.com"
-swell = "https://swellchain-testnet.infura.io/v3/3fad6f61e1b343dfa494685575db5723"
+swell = "https://swell-mainnet.alt.technology"
+swell-testnet = "https://swellchain-testnet.infura.io/v3/3fad6f61e1b343dfa494685575db5723"
 
 [profile.SMT.model_checker]
 contracts = { }

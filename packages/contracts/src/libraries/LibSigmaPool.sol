@@ -40,7 +40,7 @@ library LibSigmaPool {
         // uint256[] redemptionFee;
         uint256 collateralIdx;
         address[] collateralAddresses;
-        string[] collateralSymbols;
+        // string[] collateralSymbols;
         bool[] isMintPaused;
         bool[] isRedeemPaused;
         mapping(address user => Lock[] locks) userLocks;
@@ -62,7 +62,6 @@ library LibSigmaPool {
     struct CollateralInformation {
         uint256 index;
         address collateralAddr;
-        string symbol;
         bool isMintPaused;
         bool isRedeemPaused;
     }
@@ -299,13 +298,13 @@ library LibSigmaPool {
 
     function collateralInformation(
         address collateralAddress
-    ) internal view returns (uint256 index, address collateralAddr, string memory symbol, bool isMintPaused, bool isRedeemPaused) {
+    ) internal view returns (uint256 index, address collateralAddr, bool isMintPaused, bool isRedeemPaused) {
         SigmaPoolStorage storage s = sigmaPoolStorage();
 
         require(s.isCollateralEnabled[collateralAddress], "SigmaPool: collateral is not enabled");
 
         CollateralInformation memory info = s.collateralInformation[collateralAddress];
-        return (info.index, info.collateralAddr, info.symbol, info.isMintPaused, info.isRedeemPaused);
+        return (info.index, info.collateralAddr, info.isMintPaused, info.isRedeemPaused);
     }
 
     function addCollateralToken(address collateralAddress) internal {
@@ -318,14 +317,13 @@ library LibSigmaPool {
         s.collateralAddresses.push(collateralAddress);
         s.collateralIndex[collateralAddress] = index;
         s.isCollateralEnabled[collateralAddress] = false;
-        s.collateralSymbols.push(ERC20(collateralAddress).symbol());
+        // s.collateralSymbols.push(ERC20(collateralAddress).symbol());
         s.isMintPaused.push(false);
         s.isRedeemPaused.push(false);
 
         CollateralInformation memory collateralInfo = CollateralInformation(
             index,
             collateralAddress,
-            ERC20(collateralAddress).symbol(),
             false,
             false
         );
@@ -344,6 +342,12 @@ library LibSigmaPool {
         SigmaPoolStorage storage s = sigmaPoolStorage();
 
         s.isCollateralEnabled[s.collateralAddresses[collateralIndex]] = true;
+    }
+
+    function disableCollateral(uint256 collateralIndex) internal {
+        SigmaPoolStorage storage s = sigmaPoolStorage();
+
+        s.isCollateralEnabled[s.collateralAddresses[collateralIndex]] = false;
     }
 
     function collateralExists(address collateralAddress) internal view returns (bool) {

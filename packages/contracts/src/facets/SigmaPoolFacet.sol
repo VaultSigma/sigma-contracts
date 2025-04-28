@@ -58,6 +58,10 @@ contract SigmaPoolFacet is Modifiers {
         LibSigmaPool.enableCollateral(collateralIndex);
     }
 
+    function disableCollateral(uint256 collateralIndex) external onlyAdmin() {
+        LibSigmaPool.disableCollateral(collateralIndex);
+    }
+
     function setFees(uint256 redemptionFee) external {
         LibSigmaPool.setFees(redemptionFee);
     }
@@ -72,7 +76,7 @@ contract SigmaPoolFacet is Modifiers {
 
     function collateralInformation(
         address collateralAddress
-    ) external view returns (uint256 index, address collateralAddr, string memory symbol, bool isMintPaused, bool isRedeemPaused) {
+    ) external view returns (uint256 index, address collateralAddr, bool isMintPaused, bool isRedeemPaused) {
         return LibSigmaPool.collateralInformation(collateralAddress);
     }
 

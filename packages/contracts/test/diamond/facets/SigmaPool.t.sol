@@ -44,6 +44,7 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         
         // Add and enable collateral token
         sigmaPoolFacet.addCollateralToken(address(collateralToken));
+        // This is index not boolean
         sigmaPoolFacet.enableCollateral(0);
         vm.stopPrank();
     }
@@ -57,10 +58,9 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         assertEq(maxLockTime, 365000);
 
 
-        (uint256 index, address collateralAddress, string memory symbol, bool isMintPaused, bool isRedeemPaused) = sigmaPoolFacet.collateralInformation(address(collateralToken));
+        (uint256 index, address collateralAddress, bool isMintPaused, bool isRedeemPaused) = sigmaPoolFacet.collateralInformation(address(collateralToken));
         assertEq(index, 0);
         assertEq(collateralAddress, address(collateralToken));
-        assertEq(symbol, "MCT");
         assertEq(isMintPaused, false);
         assertEq(isRedeemPaused, false);
     }
@@ -204,5 +204,19 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         assertEq(collateralToken.balanceOf(address(sigmaPoolFacet)), 0);
         assertEq(sigmaToken.balanceOf(mockSender), 0);
     }
+
+    function testAddCollateralToken_ShouldWork() public {
+        // vm.startPrank(admin);
+        // sigmaPoolFacet.addCollateralToken(address(collateralToken));
+        // sigmaPoolFacet.enableCollateral(1);
+        // vm.stopPrank();
+
+        (uint256 index, address collateralAddress, bool isMintPaused, bool isRedeemPaused) = sigmaPoolFacet.collateralInformation(address(collateralToken));
+        assertEq(index, 0);
+        assertEq(collateralAddress, address(collateralToken));
+        assertEq(isMintPaused, false);
+        assertEq(isRedeemPaused, false);
+    }
+    
 
 }

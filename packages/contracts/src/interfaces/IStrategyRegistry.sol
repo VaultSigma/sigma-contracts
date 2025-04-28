@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {LibStrategyRegistry} from "../libraries/LibStrategyRegistry.sol";
+
 interface IStrategyRegistry {
-    struct StrategyInfo {
-        address deploymentAddress;
-        string strategyDesc;
-        bool isActive;
-    }
-
-    event StrategyAdded(bytes32 strategyId, string strategyDesc);
-
-    function addStrategy(address deploymentAddress, string memory strategyDesc) external;
-    function toggleStrategy(bytes32 strategyId, bool isActive) external;
-    function getStrategyInfo(bytes32 strategyId) external view returns (StrategyInfo memory);
+    function addStrategy(string memory ipfsUri, string memory strategyDesc, LibStrategyRegistry.StrategyType strategyType) external;
+    function updateStrategy(uint256 strategyId, string memory ipfsUri, LibStrategyRegistry.StrategyType strategyType) external;
+    function toggleStrategy(uint256 strategyId, bool isActive) external;
+    function getStrategyInfo(uint256 strategyId) external view returns (LibStrategyRegistry.StrategyInfo memory);
+    function getAllStrategies() external view returns (LibStrategyRegistry.StrategyInfo[] memory);
 } 

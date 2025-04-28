@@ -42,8 +42,6 @@ library LibSigmaRebalancer {
 
     function initialize(address[] memory _collateralTokens) internal {
         SigmaRebalancerStorage storage s = getSigmaRebalancerStorage();
-        // require(s.rebalancerManager == address(0), "SigmaRebalancer: already initialized");
-
         // s.rebalancerManager = _rebalancerManager;
 
         for (uint256 i = 0; i < _collateralTokens.length; i++) {
@@ -61,27 +59,12 @@ library LibSigmaRebalancer {
         s.dexRouter = ICrocSwapDex(_dexRouter);
     }
 
-    function setRebalancerManager(address _rebalancerManager) internal {
-        SigmaRebalancerStorage storage s = getSigmaRebalancerStorage();
-        require(s.rebalancerManager == address(0), "SigmaRebalancer: rebalancer manager already set");
-        require(_rebalancerManager != address(0), "SigmaRebalancer: zero address");
-        s.rebalancerManager = _rebalancerManager;
-    }
-
     function setSigmaToken(address _sigmaToken) internal {
         SigmaRebalancerStorage storage s = getSigmaRebalancerStorage();
         require(s.sigmaToken == address(0), "SigmaRebalancer: address already set");
         require(_sigmaToken != address(0), "SigmaRebalancer: zero address");
 
         s.sigmaToken = _sigmaToken;
-    }
-
-    function setNewCollateralToken(address _newCollateralToken) internal {
-        SigmaRebalancerStorage storage s = getSigmaRebalancerStorage();
-        require(s.sigmaToken == address(0), "SigmaRebalancer: sigma token not set");
-        require(_newCollateralToken != address(0), "SigmaRebalancer: zero address");
-
-        s.collateralTokens.push(_newCollateralToken);
     }
 
     function setSigmaPool(address _sigmaPoolAddress) internal {

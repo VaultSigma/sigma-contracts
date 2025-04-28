@@ -81,6 +81,8 @@ contract Deploy001 is Script, DiamondTestHelper {
     address adminAddress;
     address ownerAddress;
 
+    
+
     vSigmaToken sigmaToken;
     ERC1967Proxy sigmaTokenProxy;
 
@@ -279,10 +281,18 @@ contract Deploy001 is Script, DiamondTestHelper {
         ManagerFacet managerFacet = ManagerFacet(address(diamond));
         managerFacet.setSigmaToken(address(sigmaToken));
 
+        // wETH address on Base Swell
         address collateralToken = 0x4200000000000000000000000000000000000006;
+        // TODO: Set fee treasury
+        address feeTreasury = 0x0000000000000000000000000000000000000000;
 
         // set Sigma token address in the SigmaPoolFacet
-        sigmaPoolFacet.initialize(collateralToken, address(sigmaToken));
+        sigmaPoolFacet.initialize(address(sigmaToken), 1000, 365000);
+        // sigmaPoolFacet.setFeeTreasury(address(feeTreasury));
+
+        // Add and enable collateral token
+        sigmaPoolFacet.addCollateralToken(collateralToken);
+        // sigmaPoolFacet.enableCollateral(0);
 
         // stop sending admin transactions
         vm.stopBroadcast();
