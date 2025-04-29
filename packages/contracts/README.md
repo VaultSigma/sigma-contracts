@@ -21,10 +21,10 @@ https://book.getfoundry.sh/
 $ forge build
 ```
 
-### Test
+### Test - All tests run on Swell Mainnet forks
 
 ```shell
-$ forge test
+$ forge test --fork-url swell
 ```
 
 ### Format

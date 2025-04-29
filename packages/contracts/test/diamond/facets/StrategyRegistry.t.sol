@@ -9,7 +9,6 @@ import {UintUtils} from "../../../src/libraries/UintUtils.sol";
 import "../../../src/libraries/Constants.sol";
 
 contract SigmaPoolFacetTest is DiamondTestSetup {
-
     string ipfsUri = "ipfs://QmS4ghgMgPXqVZMQ74v2QZ8Q6K4Q6K4Q6K4Q6K4Q6K4Q6K4";
     string strategyDesc = "Experimental AI Trading Strategy";
 
@@ -28,7 +27,4 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         strategyRegistryFacet.updateStrategy(strategyId, ipfsUri, LibStrategyRegistry.StrategyType.Stable);
         vm.stopPrank();
     }
-
-
-
 }

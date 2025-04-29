@@ -42,10 +42,7 @@ contract Modifiers {
      */
     modifier nonReentrant() {
         // On the first call to nonReentrant, _notEntered will be true
-        require(
-            store.reentrancyStatus != _ENTERED,
-            "ReentrancyGuard: reentrant call"
-        );
+        require(store.reentrancyStatus != _ENTERED, "ReentrancyGuard: reentrant call");
 
         // Any calls to nonReentrant after this point will fail
         store.reentrancyStatus = _ENTERED;
@@ -64,10 +61,7 @@ contract Modifiers {
 
     /// @notice Checks that method is called by address with the `DEFAULT_ADMIN_ROLE` role
     modifier onlyAdmin() {
-        require(
-            LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "Manager: Caller is not admin"
-        );
+        require(LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Manager: Caller is not admin");
         _;
     }
 
@@ -85,19 +79,13 @@ contract Modifiers {
 
     /// @notice Checks that method is called by address with the `PAUSER_ROLE` role
     modifier onlyPauser() {
-        require(
-            LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "not pauser"
-        );
+        require(LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "not pauser");
         _;
     }
 
     /// @notice Checks that method is called by address with the `CURVE_DOLLAR_MANAGER_ROLE` role
     modifier onlySigmaManager() {
-        require(
-            LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "Manager: Caller is not Sigma"
-        );
+        require(LibAccessControl.hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Manager: Caller is not Sigma");
         _;
     }
 

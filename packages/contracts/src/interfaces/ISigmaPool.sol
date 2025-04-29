@@ -40,16 +40,19 @@ interface ISigmaPool {
     function collateralInformation(address collateralAddress) external view returns (CollateralInformation memory);
     function getTotalAssets() external view returns (uint256);
     function getTotalShares() external view returns (uint256);
-    function getLockInfo(address user, uint256 id) external view returns (
-        uint256 amount,
-        uint256 timelock,
-        uint256 unlockTime,
-        uint256 rewards
-    );
+    function getLockInfo(address user, uint256 id)
+        external
+        view
+        returns (uint256 amount, uint256 timelock, uint256 unlockTime, uint256 rewards);
     function getUserTotalLocked(address user) external view returns (uint256);
     function getCollateralAddresses() external view returns (address[] memory);
     function isCollateralEnabled(address collateralAddress) external view returns (bool);
     function isMintPaused(uint256 collateralIndex) external view returns (bool);
     function isRedeemPaused(uint256 collateralIndex) external view returns (bool);
     function collateralExists(address collateralAddress) external view returns (bool);
-} 
+    function getRebalancerBalance(uint256 collateralIndex) external view returns (uint256);
+    function initRebalancerBalance(uint256 collateralIndex) external;
+    function allocToRebalancer(uint256 collateralIndex, uint256 amount) external;
+    function getDexRouter() external view returns (address);
+    function setStrategyRouter() external;
+}

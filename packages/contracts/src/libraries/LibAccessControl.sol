@@ -7,7 +7,11 @@ import {AddressUtils} from "../libraries/AddressUtils.sol";
 import {UintUtils} from "../libraries/UintUtils.sol";
 import {LibAppStorage} from "./LibAppStorage.sol";
 
-/// @notice Access control library
+/**
+ * @title LibAccessControl
+ * @notice Library for managing access control in the protocol
+ * @dev Provides role-based access control functionality with role hierarchy
+ */
 library LibAccessControl {
     using AddressUtils for address;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -15,46 +19,59 @@ library LibAccessControl {
 
     /// @notice Storage slot used to store data for this library
     bytes32 constant ACCESS_CONTROL_STORAGE_SLOT =
-        bytes32(
-            uint256(keccak256("sigma.contracts.access.control.storage")) - 1
-        ) & ~bytes32(uint256(0xff));
+        bytes32(uint256(keccak256("sigma.contracts.access.control.storage")) - 1) & ~bytes32(uint256(0xff));
 
-    /// @notice Structure to keep all role members with their admin role
+    /**
+     * @notice Structure to keep all role members with their admin role
+     * @dev Uses EnumerableSet for efficient role membership management
+     */
     struct RoleData {
         EnumerableSet.AddressSet members;
         bytes32 adminRole;
     }
 
-    /// @notice Structure to keep all protocol roles
+    /**
+     * @notice Structure to keep all protocol roles
+     * @dev Maps role identifiers to their respective RoleData
+     */
     struct Layout {
         mapping(bytes32 => RoleData) roles;
     }
 
-    /// @notice Emitted when admin role of a role is updated
-    event RoleAdminChanged(
-        bytes32 indexed role,
-        bytes32 indexed previousAdminRole,
-        bytes32 indexed newAdminRole
-    );
+    /**
+     * @notice Emitted when admin role of a role is updated
+     * @param role Role whose admin was changed
+     * @param previousAdminRole Previous admin role
+     * @param newAdminRole New admin role
+     */
+    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
 
-    /// @notice Emitted when role is granted to account
-    event RoleGranted(
-        bytes32 indexed role,
-        address indexed account,
-        address indexed sender
-    );
+    /**
+     * @notice Emitted when role is granted to account
+     * @param role Role that was granted
+     * @param account Account that received the role
+     * @param sender Account that granted the role
+     */
+    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
 
-    /// @notice Emitted when role is revoked from account
-    event RoleRevoked(
-        bytes32 indexed role,
-        address indexed account,
-        address indexed sender
-    );
+    /**
+     * @notice Emitted when role is revoked from account
+     * @param role Role that was revoked
+     * @param account Account that lost the role
+     * @param sender Account that revoked the role
+     */
+    event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 
-    /// @notice Emitted when the pause is triggered by `account`
+    /**
+     * @notice Emitted when the pause is triggered
+     * @param account Account that triggered the pause
+     */
     event Paused(address account);
 
-    /// @notice Emitted when the pause is lifted by `account`
+    /**
+     * @notice Emitted when the pause is lifted
+     * @param account Account that lifted the pause
+     */
     event Unpaused(address account);
 
     /**
@@ -70,14 +87,18 @@ library LibAccessControl {
 
     /**
      * @notice Checks that a method can only be called by the provided role
-     * @param role Role name
+     * @dev Reverts if the caller doesn't have the required role
+     * @param role Role name to check
      */
     modifier onlyRole(bytes32 role) {
         checkRole(role);
         _;
     }
 
-    /// @notice Returns true if the contract is paused and false otherwise
+    /**
+     * @notice Returns true if the contract is paused and false otherwise
+     * @return bool Whether the contract is paused
+     */
     function paused() internal view returns (bool) {
         return LibAppStorage.appStorage().paused;
     }
@@ -86,17 +107,15 @@ library LibAccessControl {
      * @notice Checks whether role is assigned to account
      * @param role Role to check
      * @param account Address to check
-     * @return Whether role is assigned to account
+     * @return bool Whether role is assigned to account
      */
-    function hasRole(
-        bytes32 role,
-        address account
-    ) internal view returns (bool) {
+    function hasRole(bytes32 role, address account) internal view returns (bool) {
         return accessControlStorage().roles[role].members.contains(account);
     }
 
     /**
      * @notice Reverts if sender does not have a given role
+     * @dev Reverts with a descriptive error message
      * @param role Role to query
      */
     function checkRole(bytes32 role) internal view {
@@ -105,6 +124,7 @@ library LibAccessControl {
 
     /**
      * @notice Reverts if given account does not have a given role
+     * @dev Reverts with a descriptive error message
      * @param role Role to query
      * @param account Address to query
      */
@@ -126,7 +146,7 @@ library LibAccessControl {
     /**
      * @notice Returns admin role for a given role
      * @param role Role to query
-     * @return Admin role for a provided role
+     * @return bytes32 Admin role for the provided role
      */
     function getRoleAdmin(bytes32 role) internal view returns (bytes32) {
         return accessControlStorage().roles[role].adminRole;
@@ -171,13 +191,19 @@ library LibAccessControl {
         revokeRole(role, msg.sender);
     }
 
-    /// @notice Pauses the contract
+    /**
+     * @notice Pauses the contract
+     * @dev Emits a Paused event
+     */
     function pause() internal {
         LibAppStorage.appStorage().paused = true;
         emit Paused(msg.sender);
     }
 
-    /// @notice Unpauses the contract
+    /**
+     * @notice Unpauses the contract
+     * @dev Emits an Unpaused event
+     */
     function unpause() internal {
         LibAppStorage.appStorage().paused = false;
         emit Unpaused(msg.sender);

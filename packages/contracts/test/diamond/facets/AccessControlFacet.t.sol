@@ -14,10 +14,8 @@ contract AccessControlFacetTest is DiamondTestSetup {
     address mockSender = makeAddr("mockSender");
     address mockRecipient = makeAddr("mockRecipient");
 
-
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
     event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
-
 
     function testGrantRole_ShouldWork() public {
         vm.prank(admin);
@@ -51,8 +49,6 @@ contract AccessControlFacetTest is DiamondTestSetup {
         emit RoleRevoked(SIGMA_TOKEN_BURNER_ROLE, mockRecipient, admin);
         accessControlFacet.revokeRole(SIGMA_TOKEN_BURNER_ROLE, mockRecipient);
     }
-    
-    
 
     // function testRevokeRole_ShouldWork() public {
 }

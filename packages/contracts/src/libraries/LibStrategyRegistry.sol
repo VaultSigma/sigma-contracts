@@ -34,7 +34,7 @@ library LibStrategyRegistry {
 
     function addStrategy(string memory ipfsUri, string memory strategyDesc, StrategyType strategyType) internal {
         StrategyRegistryStorage storage s = registryStorage();
-        
+
         // Might consider using a simple uint256 counter instead of a keccak256 hash in future
         uint256 strategyId = uint256(keccak256(abi.encodePacked(ipfsUri)));
 
@@ -42,7 +42,7 @@ library LibStrategyRegistry {
 
         // Leaving this in for now
         s.strategyCount++;
-        s.strategyIds.push(strategyId); 
+        s.strategyIds.push(strategyId);
         s.stratByIds[strategyId] = StrategyInfo({
             ipfsUri: ipfsUri,
             strategyDesc: strategyDesc,
@@ -87,5 +87,4 @@ library LibStrategyRegistry {
             strategies[i] = s.stratByIds[s.strategyIds[i]];
         }
     }
-
 }

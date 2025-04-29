@@ -15,10 +15,12 @@ import {DiamondInit} from "../../src/upgradeInitializers/DiamondInit.sol";
 import {DiamondTestHelper} from "../helpers/DiamondTestHelper.sol";
 import {SigmaPoolFacet} from "../../src/facets/SigmaPoolFacet.sol";
 import {StrategyRegistryFacet} from "../../src/facets/StrategyRegistryFacet.sol";
+import {SigmaRebalancerFacet} from "../../src/facets/SigmaRebalancerFacet.sol";
 // import {UUPSTestHelper} from "../helpers/UUPSTestHelper.sol";
 /**
  * @notice Deploys diamond contract with all of the facets
  */
+
 abstract contract DiamondTestSetup is DiamondTestHelper {
     // diamond related contracts
     Diamond diamond;
@@ -32,6 +34,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     OwnershipFacet ownershipFacet;
     SigmaPoolFacet sigmaPoolFacet;
     StrategyRegistryFacet strategyRegistryFacet;
+    SigmaRebalancerFacet sigmaRebalancerFacet;
     // diamond facet implementation instances (should not be used in tests, use only on upgrades)
     AccessControlFacet accessControlFacetImplementation;
     DiamondCutFacet diamondCutFacetImplementation;
@@ -40,6 +43,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     OwnershipFacet ownershipFacetImplementation;
     SigmaPoolFacet sigmaPoolFacetImplementation;
     StrategyRegistryFacet strategyRegistryFacetImplementation;
+    SigmaRebalancerFacet sigmaRebalancerFacetImplementation;
     // facet names with addresses
     string[] facetNames;
     address[] facetAddressList;
@@ -59,7 +63,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
     bytes4[] selectorsOfOwnershipFacet;
     bytes4[] selectorsOfSigmaPoolFacet;
     bytes4[] selectorsOfStrategyRegistryFacet;
-
+    bytes4[] selectorsOfSigmaRebalancerFacet;
 
     /// @notice Deploys diamond and connects facets
     function setUp() public virtual {
@@ -71,27 +75,15 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         contract2 = generateAddress("Contract2", true, 10 ether);
 
         // set all function selectors
-        selectorsOfAccessControlFacet = getSelectorsFromAbi(
-            "/out/AccessControlFacet.sol/AccessControlFacet.json"
-        );
-        selectorsOfDiamondCutFacet = getSelectorsFromAbi(
-            "/out/DiamondCutFacet.sol/DiamondCutFacet.json"
-        );
-        selectorsOfDiamondLoupeFacet = getSelectorsFromAbi(
-            "/out/DiamondLoupeFacet.sol/DiamondLoupeFacet.json"
-        );
-        selectorsOfManagerFacet = getSelectorsFromAbi(
-            "/out/ManagerFacet.sol/ManagerFacet.json"
-        );
-        selectorsOfOwnershipFacet = getSelectorsFromAbi(
-            "/out/OwnershipFacet.sol/OwnershipFacet.json"
-        );
-        selectorsOfSigmaPoolFacet = getSelectorsFromAbi(
-            "/out/SigmaPoolFacet.sol/SigmaPoolFacet.json"
-        );
-        selectorsOfStrategyRegistryFacet = getSelectorsFromAbi(
-            "/out/StrategyRegistryFacet.sol/StrategyRegistryFacet.json"
-        );
+        selectorsOfAccessControlFacet = getSelectorsFromAbi("/out/AccessControlFacet.sol/AccessControlFacet.json");
+        selectorsOfDiamondCutFacet = getSelectorsFromAbi("/out/DiamondCutFacet.sol/DiamondCutFacet.json");
+        selectorsOfDiamondLoupeFacet = getSelectorsFromAbi("/out/DiamondLoupeFacet.sol/DiamondLoupeFacet.json");
+        selectorsOfManagerFacet = getSelectorsFromAbi("/out/ManagerFacet.sol/ManagerFacet.json");
+        selectorsOfOwnershipFacet = getSelectorsFromAbi("/out/OwnershipFacet.sol/OwnershipFacet.json");
+        selectorsOfSigmaPoolFacet = getSelectorsFromAbi("/out/SigmaPoolFacet.sol/SigmaPoolFacet.json");
+        selectorsOfStrategyRegistryFacet =
+            getSelectorsFromAbi("/out/StrategyRegistryFacet.sol/StrategyRegistryFacet.json");
+        selectorsOfSigmaRebalancerFacet = getSelectorsFromAbi("/out/SigmaRebalancerFacet.sol/SigmaRebalancerFacet.json");
 
         // deploy facet implementation instances
         accessControlFacetImplementation = new AccessControlFacet();
@@ -101,6 +93,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         ownershipFacetImplementation = new OwnershipFacet();
         sigmaPoolFacetImplementation = new SigmaPoolFacet();
         strategyRegistryFacetImplementation = new StrategyRegistryFacet();
+        sigmaRebalancerFacetImplementation = new SigmaRebalancerFacet();
         // prepare diamond init args
         diamondInit = new DiamondInit();
         facetNames = [
@@ -110,22 +103,18 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
             "ManagerFacet",
             "OwnershipFacet",
             "SigmaPoolFacet",
-            "StrategyRegistryFacet"
+            "StrategyRegistryFacet",
+            "SigmaRebalancerFacet"
         ];
-        DiamondInit.Args memory initArgs = DiamondInit.Args({
-            admin: admin
-        });
+        DiamondInit.Args memory initArgs = DiamondInit.Args({admin: admin});
         // diamond arguments
         DiamondArgs memory _args = DiamondArgs({
             owner: owner,
             init: address(diamondInit),
-            initCalldata: abi.encodeWithSelector(
-                DiamondInit.init.selector,
-                initArgs
-            )
+            initCalldata: abi.encodeWithSelector(DiamondInit.init.selector, initArgs)
         });
 
-        FacetCut[] memory cuts = new FacetCut[](7);
+        FacetCut[] memory cuts = new FacetCut[](8);
 
         cuts[0] = (
             FacetCut({
@@ -176,6 +165,13 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
                 functionSelectors: selectorsOfStrategyRegistryFacet
             })
         );
+        cuts[7] = (
+            FacetCut({
+                facetAddress: address(sigmaRebalancerFacetImplementation),
+                action: FacetCutAction.Add,
+                functionSelectors: selectorsOfSigmaRebalancerFacet
+            })
+        );
         // deploy diamond
         vm.prank(owner);
         diamond = new Diamond(_args, cuts);
@@ -188,6 +184,7 @@ abstract contract DiamondTestSetup is DiamondTestHelper {
         ownershipFacet = OwnershipFacet(address(diamond));
         sigmaPoolFacet = SigmaPoolFacet(address(diamond));
         strategyRegistryFacet = StrategyRegistryFacet(address(diamond));
+        sigmaRebalancerFacet = SigmaRebalancerFacet(address(diamond));
         // get all addresses
         facetAddressList = diamondLoupeFacet.facetAddresses();
 

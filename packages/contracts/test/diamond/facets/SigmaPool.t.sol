@@ -7,6 +7,7 @@ import {MockERC20} from "../../../src/mocks/MockERC20.sol";
 import {AddressUtils} from "../../../src/libraries/AddressUtils.sol";
 import {UintUtils} from "../../../src/libraries/UintUtils.sol";
 import "../../../src/libraries/Constants.sol";
+import {LibSigmaPool} from "../../../src/libraries/LibSigmaPool.sol";
 
 contract SigmaPoolFacetTest is DiamondTestSetup {
     using AddressUtils for address;
@@ -31,17 +32,16 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
     function setUp() public override {
         super.setUp();
 
-
         vm.prank(admin);
         collateralToken.mint(mockSender, 1000000);
-        
+
         // Setup in setUp to ensure it's done before each test
         // Initialize the pool
         vm.startPrank(admin);
         sigmaPoolFacet.initialize(address(sigmaToken), 1000, 365000);
         sigmaPoolFacet.setFeeTreasury(address(feeTreasury));
         sigmaPoolFacet.setSigmaRebalancer(address(sigmaRebalancer));
-        
+
         // Add and enable collateral token
         sigmaPoolFacet.addCollateralToken(address(collateralToken));
         // This is index not boolean
@@ -51,14 +51,15 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
 
     function testInitialize_ShouldWork() public view {
         // Test is now handled in setUp
-        (uint256 totalAssets, uint256 totalShares, uint256 minLockTime, uint256 maxLockTime) = sigmaPoolFacet.getPoolInfo();
+        (uint256 totalAssets, uint256 totalShares, uint256 minLockTime, uint256 maxLockTime) =
+            sigmaPoolFacet.getPoolInfo();
         assertEq(totalAssets, 0);
         assertEq(totalShares, 0);
         assertEq(minLockTime, 1000);
         assertEq(maxLockTime, 365000);
 
-
-        (uint256 index, address collateralAddress, bool isMintPaused, bool isRedeemPaused) = sigmaPoolFacet.collateralInformation(address(collateralToken));
+        (uint256 index, address collateralAddress, bool isMintPaused, bool isRedeemPaused) =
+            sigmaPoolFacet.collateralInformation(address(collateralToken));
         assertEq(index, 0);
         assertEq(collateralAddress, address(collateralToken));
         assertEq(isMintPaused, false);
@@ -67,21 +68,13 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
 
     function testInitialize_ShouldRevertIfSigmaTokenIsZeroAddress() public {
         vm.prank(admin);
-        vm.expectRevert(
-            abi.encodePacked(
-                "SigmaPool: vSigmaToken is zero address"
-            )
-        );
+        vm.expectRevert(abi.encodePacked("SigmaPool: vSigmaToken is zero address"));
         sigmaPoolFacet.initialize(address(0), 1000, 365000);
     }
 
     function testInitialize_ShouldRevertIfNotAdmin() public {
         vm.prank(mockSender);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Manager: Caller is not admin"
-            )
-        );
+        vm.expectRevert(abi.encodePacked("Manager: Caller is not admin"));
         sigmaPoolFacet.initialize(address(sigmaToken), 1000, 365000);
     }
 
@@ -92,11 +85,7 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
 
     function testSetFeeTreasury_ShouldRevertIfSenderIsNotAdmin() public {
         vm.prank(mockSender);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Manager: Caller is not admin"
-            )
-        );
+        vm.expectRevert(abi.encodePacked("Manager: Caller is not admin"));
         sigmaPoolFacet.setFeeTreasury(address(feeTreasury));
     }
 
@@ -107,11 +96,7 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
 
     function testSetSigmaRebalancer_ShouldRevertIfSenderIsNotAdmin() public {
         vm.prank(mockSender);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Manager: Caller is not admin"  
-            )
-        );
+        vm.expectRevert(abi.encodePacked("Manager: Caller is not admin"));
         sigmaPoolFacet.setSigmaRebalancer(address(sigmaRebalancer));
     }
 
@@ -132,11 +117,11 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         assertEq(sigmaPoolFacet.getTotalAssets(), 10);
         assertEq(collateralToken.balanceOf(address(sigmaPoolFacet)), 10);
         assertEq(sigmaToken.balanceOf(mockSender), 10);
-        
+
         // // // Verify the lock was created
-        // (uint256 amount, uint256 timelock, uint256 unlockTime, uint256 rewards) = 
+        // (uint256 amount, uint256 timelock, uint256 unlockTime, uint256 rewards) =
         //     sigmaPoolFacet.getLockInfo(mockSender, 0);
-            
+
         // assertEq(amount, 10);
         // assertEq(timelock, 10000);
         // assertEq(unlockTime, block.timestamp + 10000);
@@ -150,7 +135,7 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
 
     function testCalculateShares_ShouldWork(uint256 amount) public {
         vm.startPrank(mockSender);
-        
+
         amount = bound(amount, 1, 1000000);
         deal(address(collateralToken), mockSender, amount);
 
@@ -165,24 +150,19 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
     }
 
     function testCalculateAssets_ShouldRevertIfAmountIsZero() public {
-        vm.expectRevert(
-            abi.encodePacked(
-                "SigmaPool: total shares is zero"
-            )
-        );
+        vm.expectRevert(abi.encodePacked("SigmaPool: total shares is zero"));
         sigmaPoolFacet.calculateAssets(0);
     }
 
     function testCalculateAssets_ShouldWork(uint256 amount) public {
         vm.startPrank(mockSender);
-        
+
         amount = bound(amount, 1, 1000000);
         deal(address(collateralToken), mockSender, amount);
 
         collateralToken.approve(address(diamond), amount);
         sigmaPoolFacet.deposit(0, amount, 10000);
         vm.stopPrank();
-        
 
         uint256 calc_assets = (amount * sigmaPoolFacet.getTotalAssets()) / sigmaPoolFacet.getTotalShares();
         uint256 assets = sigmaPoolFacet.calculateAssets(amount);
@@ -211,12 +191,32 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         // sigmaPoolFacet.enableCollateral(1);
         // vm.stopPrank();
 
-        (uint256 index, address collateralAddress, bool isMintPaused, bool isRedeemPaused) = sigmaPoolFacet.collateralInformation(address(collateralToken));
+        (uint256 index, address collateralAddress, bool isMintPaused, bool isRedeemPaused) =
+            sigmaPoolFacet.collateralInformation(address(collateralToken));
         assertEq(index, 0);
         assertEq(collateralAddress, address(collateralToken));
         assertEq(isMintPaused, false);
         assertEq(isRedeemPaused, false);
     }
-    
 
+    // Testing this as a unit test is not possible because it requires the crocswap dex router
+    // function testRebalance_ShouldWork() public {
+    //     LibSigmaPool.RebalanceParams memory params = LibSigmaPool.RebalanceParams({
+    //         base: address(collateralToken),
+    //         quote: address(sigmaToken),
+    //         poolIdx: 0,
+    //         isBuy: true,
+    //         inBaseQty: true,
+    //         qty: 10,
+    //         tip: 1000,
+    //         limitPrice: 1000,
+    //         minOut: 1000,
+    //         reserveFlags: 1000,
+    //         collateralIndex: 0
+    //     });
+
+    //     vm.startPrank(admin);
+    //     sigmaPoolFacet.rebalance(params);
+    //     vm.stopPrank();
+    // }
 }

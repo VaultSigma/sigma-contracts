@@ -2,7 +2,9 @@
 pragma solidity 0.8.29;
 
 interface ICrocSwapDex {
-    event CrocKnockoutCross(bytes32 indexed pool, int24 indexed tick, bool isBid, uint32 pivotTime, uint64 feeMileage, uint160 commitEntropy);
+    event CrocKnockoutCross(
+        bytes32 indexed pool, int24 indexed tick, bool isBid, uint32 pivotTime, uint64 feeMileage, uint160 commitEntropy
+    );
 
     function acceptCrocDex() external pure returns (bool);
 
@@ -25,10 +27,13 @@ interface ICrocSwapDex {
 
     function userCmd(uint16 callpath, bytes memory cmd) external payable returns (bytes memory);
 
-    function userCmdRelayer(uint16 callpath, bytes memory cmd, bytes memory conds, bytes memory relayerTip, bytes memory signature)
-        external
-        payable
-        returns (bytes memory output);
+    function userCmdRelayer(
+        uint16 callpath,
+        bytes memory cmd,
+        bytes memory conds,
+        bytes memory relayerTip,
+        bytes memory signature
+    ) external payable returns (bytes memory output);
 
     function userCmdRouter(uint16 callpath, bytes memory cmd, address client) external payable returns (bytes memory);
 }

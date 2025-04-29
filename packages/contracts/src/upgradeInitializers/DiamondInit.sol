@@ -47,6 +47,5 @@ contract DiamondInit is Modifiers {
 
         // reentrancy guard
         _initReentrancyGuard();
-
     }
 }

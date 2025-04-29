@@ -9,45 +9,32 @@ import "../libraries/Constants.sol";
 // import {IERC20Sigma} from "../interfaces/IERC20Sigma.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
-
-contract vSigmaToken is 
-    Initializable,
-    ERC20Upgradeable,
-    OwnableUpgradeable,
-    UUPSUpgradeable
-{
-
+contract vSigmaToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable {
     IAccessControl public accessControl;
 
     event Minting(address indexed minter, address indexed to, uint256 amount);
     event Burning(address indexed burner, uint256 amount);
-    
+
     constructor() {
         _disableInitializers();
     }
 
     modifier onlySigmaMinter() {
-        require(
-            accessControl.hasRole(SIGMA_TOKEN_MINTER_ROLE, msg.sender),
-            "vSigma Token: not sigma minter"
-        );
+        require(accessControl.hasRole(SIGMA_TOKEN_MINTER_ROLE, msg.sender), "vSigma Token: not sigma minter");
         _;
     }
 
     modifier onlySigmaBurner() {
-        require(
-            accessControl.hasRole(SIGMA_TOKEN_BURNER_ROLE, msg.sender),
-            "vSigma Token: not sigma burner"
-        );
+        require(accessControl.hasRole(SIGMA_TOKEN_BURNER_ROLE, msg.sender), "vSigma Token: not sigma burner");
         _;
     }
 
-    function initialize(address _manager) external onlyInitializing() {
+    function initialize(address _manager) external onlyInitializing {
         require(_manager != address(0), "vSigma Token: manager is zero address");
-        
+
         __ERC20_init("Sigma Vault", "vSIGMA");
         __UUPSUpgradeable_init();
-        
+
         accessControl = IAccessControl(_manager);
     }
 

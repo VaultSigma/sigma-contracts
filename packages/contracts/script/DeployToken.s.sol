@@ -20,10 +20,7 @@ contract DeployScript is Script {
         );
 
         // Deploy proxy
-        ERC1967Proxy proxy = new ERC1967Proxy(
-            address(implementation),
-            initData
-        );
+        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
 
         // The proxy address is what users will interact with
         vSigmaToken token = vSigmaToken(address(proxy));
@@ -33,4 +30,4 @@ contract DeployScript is Script {
         console.log("vSigmaToken implementation deployed to:", address(implementation));
         console.log("vSigmaToken proxy deployed to:", address(proxy));
     }
-} 
+}

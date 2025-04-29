@@ -6,13 +6,9 @@ import "abdk/ABDKMathQuad.sol";
 /// @dev Default admin role name
 bytes32 constant DEFAULT_ADMIN_ROLE = 0x00;
 
-bytes32 constant SIGMA_TOKEN_MINTER_ROLE = keccak256(
-    "SIGMA_TOKEN_MINTER_ROLE"
-);
+bytes32 constant SIGMA_TOKEN_MINTER_ROLE = keccak256("SIGMA_TOKEN_MINTER_ROLE");
 
-bytes32 constant SIGMA_TOKEN_BURNER_ROLE = keccak256(
-    "SIGMA_TOKEN_BURNER_ROLE"
-);
+bytes32 constant SIGMA_TOKEN_BURNER_ROLE = keccak256("SIGMA_TOKEN_BURNER_ROLE");
 
 bytes32 constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
