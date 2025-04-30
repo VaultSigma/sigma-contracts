@@ -1,6 +1,53 @@
-# Sigma Contracts
+# Sigma Protocol
 
-A monorepo containing smart contracts and related tooling for the Sigma protocol.
+Sigma is a decentralized protocol that enables users to deposit collateral and earn rewards through a unique time-locked staking mechanism. The protocol features a flexible rebalancing system that optimizes yield generation across different strategies.
+
+## 🌟 Key Features
+
+- **Time-Locked Staking**: Users can lock their collateral for varying durations to earn boosted rewards
+- **Multi-Collateral Support**: Support for multiple collateral types with individual risk parameters
+- **Dynamic Rebalancing**: Automated rebalancing of assets across different strategies for optimal yield
+- **Flexible Reward System**: Quadratic reward model based on lock duration
+- **Diamond Pattern**: Modular architecture using the Diamond proxy pattern for upgradeability
+
+## 📊 Protocol Overview
+
+### Core Components
+
+1. **Sigma Pool**
+   - Manages collateral deposits and withdrawals
+   - Handles time-locked staking
+   - Calculates and distributes rewards
+
+2. **Sigma Rebalancer**
+   - Executes rebalancing operations
+   - Interacts with DEX routers
+   - Manages strategy allocations
+
+3. **Strategy Registry**
+   - Registers and manages investment strategies
+   - Tracks strategy performance
+   - Controls strategy parameters
+
+### Reward Mechanism
+
+The protocol implements a quadratic reward model where:
+- Base rewards are provided for all stakers
+- Additional rewards are calculated based on lock duration
+- Rewards are normalized between minimum (1 week) and maximum (1 year) lock periods
+
+## 📝 Contract Deployment Addresses
+
+| Network | Contract | Address | Deployment Date |
+|---------|----------|---------|-----------------|
+| Swell Testnet | AccessControlFacet | `0x44928be489e885b096b786ecb30ce8fe58e9e99b` | DONE |
+| Swell Testnet | DiamondCutFacet | `0xdc1d46bfece33220137f8d2184454560ffe0fb0b` | DONE |
+| Swell Testnet | DiamondLoupeFacet | `0x7c865be49049432265be00b063a348d854f6b701` | DONE |
+| Swell Testnet | ManagerFacet | `0x8ad9917d2a1da461bce279c0ccfcf6efac6e5f01` | DONE |
+| Swell Testnet | OwnershipFacet | `0xb46c91a431fe226ab0954beedf72b4636b0fadc3` | DONE |
+| Swell Testnet | SigmaPoolFacet | `0x69e1c2e828ab07cdd7fa113c0361b069377537be` | DONE |
+| Swell Testnet | Diamond | `0xa5d627543a5c57005b576b63253cbffcdb473049` | DONE |
+| Swell Testnet | vSigmaToken | `0xb4b9a68611ff4ca569edc263b73328b2fa8bac2f` | DONE |
 
 ## 🚀 Getting Started
 
@@ -56,22 +103,72 @@ packages/
 
 ## 🛠 Development
 
-### Building
+### Available Commands
 
 ```bash
-yarn build
+# Build and Compile
+yarn compile        # Compile contracts
+yarn build         # Build all packages
+
+# Testing
+yarn test     # Run tests with mainnet fork
+yarn test:coverage # Run tests with coverage
+
+# Deployment
+yarn deploy        # Deploy contracts
+yarn verify        # Verify contracts on Etherscan
+
+# Development
+yarn chain         # Start local blockchain
+yarn fork          # Start mainnet fork
+yarn format        # Format code
+yarn lint          # Lint code
 ```
 
 ### Testing
 
+The protocol includes comprehensive test suites that can be run in different environments:
+
+1. **Local Testing**
 ```bash
 yarn test
+```
+This runs all tests in a local environment, which is faster but doesn't include interactions with external protocols.
+
+2. **Mainnet Fork Testing**
+```bash
+yarn test --fork-url swell
+```
+The mainnet fork testing environment is crucial for:
+- Testing against real-world conditions and contracts
+- Interact with existing DeFi protocols and tokens
+- Verify protocol behavior with actual market conditions
+- Test integrations with external protocols
+- Simulate real user interactions and scenarios
+
+To run specific test files or functions:
+```bash
+# Run a specific test file
+yarn test --match-path test/SigmaPool.t.sol
+
+# Run a specific test function
+yarn test --match-test testDeposit_ShouldWork
+
+# Run tests with gas reporting
+yarn test --gas-report
 ```
 
 ### Deployment
 
 ```bash
+# Deploy to local network
 yarn deploy
+
+# Deploy to testnet
+yarn deploy --network goerli
+
+# Deploy and verify on Etherscan
+yarn deploy --verify
 ```
 
 ## 🔒 Security

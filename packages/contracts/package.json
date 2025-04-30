@@ -17,7 +17,7 @@
     "format": "make format",
     "postinstall": "shx cp -n .env.example .env",
     "lint": "make lint",
-    "test": "forge test",
+    "test": "forge test --fork-url swell",
     "verify": "make verify RPC_URL=${1:-localhost}",
     "typechain": "typechain --target ethers-v6 --out-dir typechain './out/**/*.json'"
   },

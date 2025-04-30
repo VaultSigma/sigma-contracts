@@ -303,7 +303,7 @@ contract SigmaPoolFacet is Modifiers {
      * @param collateralIndex Index of the collateral token
      * @param amount Amount to allocate
      */
-    function allocToRebalancer(uint256 collateralIndex, uint256 amount) external {
+    function allocToRebalancer(uint256 collateralIndex, uint256 amount) external onlyAdmin {
         LibSigmaPool.allocToRebalancer(collateralIndex, amount);
     }
 

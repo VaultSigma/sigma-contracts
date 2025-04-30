@@ -26,6 +26,8 @@ contract ProtocolIntegrationTest is DiamondTestSetup {
         address feeTreasury = makeAddr("feeTreasury");
         address CrocSwapDex = 0xaAAaAaaa82812F0a1f274016514ba2cA933bF24D;
 
+        uint256 initialBalance = collateralToken.balanceOf(user);
+
         // Setup protocol
         vm.startPrank(admin);
 
@@ -43,7 +45,7 @@ contract ProtocolIntegrationTest is DiamondTestSetup {
         sigmaPoolFacet.enableCollateral(0);
 
         // Add strategy
-        string memory ipfsUri = "ipfs://QmS4ghgMgPXqVZMQ74v2QZ8Q6K4Q6K4Q6K4Q6K4Q6K4Q6K4";
+        string memory ipfsUri = "ipfs://QmS4ghgMgPXqVZMQ74v2QZ8Q6K4Q6K4Q6K4Q6K4Q6K4Q6K4"; // TODO: Add actual uri
         string memory strategyDesc = "Experimental AI Trading Strategy";
         strategyRegistryFacet.addStrategy(ipfsUri, strategyDesc, LibStrategyRegistry.StrategyType.Experimental);
 
@@ -57,32 +59,49 @@ contract ProtocolIntegrationTest is DiamondTestSetup {
     function test_CompleteProtocolFlow() public {
         // 1. User approves pool to spend collateral
         vm.prank(user);
-        collateralToken.approve(address(diamond), depositAmount);
+        collateralToken.approve(address(sigmaPoolFacet), depositAmount);
 
         // 2. Verify initial state
         assertEq(collateralToken.balanceOf(address(diamond)), 0);
-        // assertEq(sigmaToken.balanceOf(user), 0);
+        assertEq(sigmaToken.balanceOf(user), 0);
         assertEq(sigmaPoolFacet.getTotalAssets(), 0);
         assertEq(sigmaPoolFacet.getTotalShares(), 0);
 
-        // // 3. User deposits collateral
+        // 3. User deposits collateral
         vm.prank(user);
         sigmaPoolFacet.deposit(0, depositAmount, timelock);
 
-        // // 4. Verify final state
-        // assertEq(collateralToken.balanceOf(user), 0);
-        // assertEq(collateralToken.balanceOf(address(diamond)), depositAmount);
-        // assertEq(sigmaToken.balanceOf(user), depositAmount); // 1:1 ratio
-        // assertEq(sigmaPoolFacet.getTotalAssets(), depositAmount);
-        // assertEq(sigmaPoolFacet.getTotalShares(), depositAmount);
+        // 4. Verify final state
+        assertEq(collateralToken.balanceOf(address(sigmaPoolFacet)), depositAmount);
+        assertEq(sigmaToken.balanceOf(user), depositAmount); // 1:1 ratio
+        assertEq(sigmaPoolFacet.getTotalAssets(), depositAmount);
+        assertEq(sigmaPoolFacet.getTotalShares(), depositAmount);
 
-        // // 5. Verify user's collateral balance
-        // assertEq(sigmaPoolFacet.getUserCollateralBalance(user, 0), depositAmount);
+        // 5. Verify user's collateral balance
+        assertEq(sigmaPoolFacet.getUserCollateralBalance(user, 0), depositAmount);
 
-        //     // 6. Verify strategy is active
-        //     uint256 strategyId = uint256(keccak256(abi.encodePacked("ipfs://QmS4ghgMgPXqVZMQ74v2QZ8Q6K4Q6K4Q6K4Q6K4Q6K4Q6K4")));
-        //     LibStrategyRegistry.StrategyInfo memory strategy = strategyRegistryFacet.getStrategyInfo(strategyId);
-        //     assertEq(strategy.isActive, false); // Strategy starts inactive
-        //     assertEq(uint256(strategy.strategyType), uint256(LibStrategyRegistry.StrategyType.Experimental));
+        // 6. Verify strategy is active
+        uint256 strategyId = uint256(keccak256(abi.encodePacked("ipfs://QmS4ghgMgPXqVZMQ74v2QZ8Q6K4Q6K4Q6K4Q6K4Q6K4Q6K4")));
+        LibStrategyRegistry.StrategyInfo memory strategy = strategyRegistryFacet.getStrategyInfo(strategyId);
+        vm.startPrank(admin);
+        strategyRegistryFacet.toggleStrategy(strategyId, true);
+        assertEq(strategyRegistryFacet.getStrategyInfo(strategyId).isActive, true); // Strategy starts inactive
+        vm.stopPrank();
+        assertEq(uint256(strategy.strategyType), uint256(LibStrategyRegistry.StrategyType.Experimental));
+
+        // 7. Allocate to rebalancer
+        vm.startPrank(admin);
+        // sigmaPoolFacet.setSigmaRebalancer(address(sigmaRebalancerFacet));
+        sigmaPoolFacet.allocToRebalancer(0, 5 ether);
+        // assertEq(collateralToken.balanceOf(address(sigmaPoolFacet)), depositAmount - 5 ether);
+        vm.stopPrank();
+
+        // 8. Verify rebalancer balance
+        // assertEq(collateralToken.balanceOf(address(sigmaRebalancerFacet)), 5 ether);
+        
+        // IERC20(address(collateralToken)).transfer(address(diamond), 5 ether);
+        // sigmaRebalancerFacet.rebalance();
+        
+        
     }
 }

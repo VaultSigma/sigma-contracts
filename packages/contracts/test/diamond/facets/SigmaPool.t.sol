@@ -109,7 +109,7 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
 
         // Deposit
         vm.startPrank(mockSender);
-        collateralToken.approve(address(diamond), 1000);
+        // collateralToken.approve(address(diamond), 1000);
         sigmaPoolFacet.deposit(0, 10, 10000);
         vm.stopPrank();
 
@@ -197,6 +197,24 @@ contract SigmaPoolFacetTest is DiamondTestSetup {
         assertEq(collateralAddress, address(collateralToken));
         assertEq(isMintPaused, false);
         assertEq(isRedeemPaused, false);
+    }
+
+    function testAllocToRebalancer_ShouldWork() public {
+        // First deposit tokens to the pool as mockSender
+        vm.startPrank(mockSender);
+        collateralToken.approve(address(diamond), 1000);
+        sigmaPoolFacet.deposit(0, 10, 10000);
+        vm.stopPrank();
+
+        // Approve the pool to transfer tokens to rebalancer
+        vm.startPrank(admin);
+        collateralToken.approve(address(diamond), 1000);
+        sigmaPoolFacet.allocToRebalancer(0, 5);
+        vm.stopPrank();
+
+        // Verify the allocation
+        assertEq(collateralToken.balanceOf(address(sigmaRebalancer)), 5);
+        assertEq(sigmaPoolFacet.getRebalancerBalance(0), 5);
     }
 
     // Testing this as a unit test is not possible because it requires the crocswap dex router

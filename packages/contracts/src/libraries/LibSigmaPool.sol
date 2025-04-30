@@ -55,6 +55,7 @@ library LibSigmaPool {
         mapping(address user => uint256 value) totalLockedPerUser;
         mapping(address collateralAddress => bool isEnabled) isCollateralEnabled;
         mapping(address collateralAddress => uint256 collateralIndex) collateralIndex;
+        mapping(uint256 collateralIndex => address collateralAddress) collateralAddr; // This is bad practice
         mapping(address collateralAddress => CollateralInformation collateralInformation) collateralInformation;
         mapping(uint256 collateralIndex => uint256 rebalancerBalance) rebalancerBalance;
     }
@@ -513,6 +514,7 @@ library LibSigmaPool {
         // s.redemptionFee.push(0);
 
         s.collateralIdx++;
+        s.collateralAddr[index] = collateralAddress;
 
         emit CollateralAdded(collateralAddress, index);
     }
@@ -590,6 +592,7 @@ library LibSigmaPool {
         SigmaPoolStorage storage s = sigmaPoolStorage();
 
         s.rebalancerBalance[collateralIndex] = s.rebalancerBalance[collateralIndex] + amount;
+        
         IERC20(s.collateralAddresses[collateralIndex]).safeTransfer(s.sigmaRebalancer, amount);
     }
 

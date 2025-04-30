@@ -59,7 +59,6 @@ contract StrategyRegistryFacet is Modifiers {
     function getStrategyInfo(uint256 strategyId)
         external
         view
-        onlyAdmin
         returns (LibStrategyRegistry.StrategyInfo memory)
     {
         return LibStrategyRegistry.getStrategyInfo(strategyId);
